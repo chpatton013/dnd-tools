@@ -201,10 +201,32 @@ STORMBREAKER_2H = Weapon(
     crit_dice_multiplier=3,
 )
 
+GUNGNIR = Weapon(
+    "Gungnir",
+    damages=[
+        Damage(DamageType.PIERCING, base=7, dice={Die.D6: 1}),
+    ],
+)
+
+GUNGNIR_SPELL = Weapon(
+    "Gungnir-Spell",
+    damages=[
+        Damage(DamageType.PIERCING, base=7, dice={Die.D6: 1}),
+        Damage(DamageType.LIGHTNING, dice={Die.D6: 4}),
+    ],
+)
+
 THURSDAY = Paladin(
     "Thursday",
     level=12,
-    weapons=[MJOLNIR_1H, MJOLNIR_2H, STORMBREAKER_1H, STORMBREAKER_2H],
+    weapons=[
+        MJOLNIR_1H,
+        MJOLNIR_2H,
+        STORMBREAKER_1H,
+        STORMBREAKER_2H,
+        GUNGNIR,
+        GUNGNIR_SPELL,
+    ],
 )
 
 
