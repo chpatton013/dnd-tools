@@ -17,9 +17,7 @@ class Paladin:
         self.level = level
         self.weapons = {weapon.name: weapon for weapon in weapons}
 
-    def damage(self, weapon_name, crit, smite=None):
-        weapon_damage = self.weapons[weapon_name].damage(crit)
-
+    def _smite_damage(self, crit, smite=None):
         smite_damage = {}
 
         if self.level >= 11:
@@ -38,6 +36,12 @@ class Paladin:
             for damage in smite_damage.values():
                 for die in damage.dice.keys():
                     damage.dice[die] *= 2
+
+        return smite_damage
+
+    def damage(self, weapon_name, crit, smite=None):
+        weapon_damage = self.weapons[weapon_name].damage(crit)
+        smite_damage = self._smite_damage(crit, smite)
 
         total_damage = {}
         for type, damage in weapon_damage.items():
@@ -88,9 +92,9 @@ class Damage:
         return total
 
     def roll(self):
-        total = self.base
+        total = RolledDamage(base = self.base)
         for die, count in self.dice.items():
-            total += sum(die.roll() for _ in range(count))
+            total += RolledDamage(rolls=[die.roll() for _ in range(count)])
         return total
 
     def merge(self, other):
@@ -101,6 +105,29 @@ class Damage:
         for die, count in other.dice.items():
             self.dice.setdefault(die, 0)
             self.dice[die] += count
+
+
+class RolledDamage:
+    def __init__(self, rolls=[], base=0):
+        self.rolls = rolls
+        self.base = base
+
+    def __str__(self):
+        dice_str = "+".join([str(roll) for roll in self.rolls])
+        if self.base:
+            return f"{self.total} ({self.base}, {dice_str})"
+        else:
+            return f"{self.total} ({dice_str})"
+
+    def __add__(self, other):
+        return RolledDamage(
+            rolls=(self.rolls + other.rolls),
+            base=(self.base + other.base),
+        )
+
+    @property
+    def total(self):
+        return self.base + sum(self.rolls)
 
 
 class DamageType(enum.Enum):
@@ -195,7 +222,7 @@ def main():
 
     damage_types = THURSDAY.damage(args.weapon_name, args.crit, args.smite)
 
-    total_rolled_damage = 0
+    total_rolled_damage = RolledDamage()
     total_expected_damage = 0
     for type, damage in damage_types.items():
         rolled_damage = damage.roll()
